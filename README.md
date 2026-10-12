@@ -17,7 +17,7 @@ De volledige bouw-, gebruiks- en publicatie-instructies staan in [FocusTimer/REA
 - `FocusTimer` — WPF-desktopapp
 - `FocusTimer.Tests` — packagevrije regressie- en resource-tests
 
-## Snel starten
+## Build
 
 ```powershell
 dotnet restore
