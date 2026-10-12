@@ -18,6 +18,7 @@ public partial class MainWindow : Window
     private readonly NotificationService _notifications;
     private readonly TrayIconRenderer _trayIconRenderer;
     private readonly System.Windows.Threading.DispatcherTimer _clock;
+    private PhasePromptWindow? _phasePromptWindow;
     private Icon _currentTrayIcon;
     private int _lastTraySecond = int.MinValue;
     private TimerPhase? _lastTrayPhase;
@@ -83,6 +84,7 @@ public partial class MainWindow : Window
         TaskbarProgress.ProgressState = _timer.IsRunning ? TaskbarItemProgressState.Normal : TaskbarItemProgressState.Paused;
         TaskbarProgress.ProgressValue = Math.Clamp(1 - remainingProgress, 0, 1);
         UpdateTrayIcon((int)Math.Ceiling(remaining.TotalSeconds), remainingProgress);
+        _phasePromptWindow?.UpdateNextPhaseRunning(_timer.IsRunning);
     }
 
     private void UpdateTrayIcon(int remainingSecond, double remainingProgress)
@@ -103,10 +105,30 @@ public partial class MainWindow : Window
         _lastTrayRunning = _timer.IsRunning;
     }
 
-    private void OnPhaseFinished(TimerPhase phase)
+    private void OnPhaseFinished(PhaseTransitionEventArgs transition)
     {
         if (_settings.Sound) System.Media.SystemSounds.Asterisk.Play();
-        _notifications.ShowPhaseFinished(phase);
+        _notifications.ShowPhaseFinished(transition.CompletedPhase);
+
+        if (_phasePromptWindow is { IsVisible: true })
+        {
+            _phasePromptWindow.UpdateTransition(transition);
+            _phasePromptWindow.Activate();
+            return;
+        }
+
+        var prompt = new PhasePromptWindow(transition, ContinueFromPhasePrompt);
+        _phasePromptWindow = prompt;
+        prompt.Closed += (_, _) =>
+        {
+            if (ReferenceEquals(_phasePromptWindow, prompt)) _phasePromptWindow = null;
+        };
+        prompt.Show();
+    }
+
+    private void ContinueFromPhasePrompt()
+    {
+        if (!_timer.IsRunning) _timer.Start();
     }
 
     private void Toggle()
@@ -152,6 +174,8 @@ public partial class MainWindow : Window
         _clock.Stop();
         _timer.Changed -= Refresh;
         _timer.Finished -= OnPhaseFinished;
+        _phasePromptWindow?.Close();
+        _phasePromptWindow = null;
         _tray.Visible = false;
         _tray.Dispose();
         _currentTrayIcon.Dispose();

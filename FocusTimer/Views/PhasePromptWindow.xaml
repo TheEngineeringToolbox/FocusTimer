@@ -1,0 +1,23 @@
+<Window x:Class="FocusTimer.Views.PhasePromptWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Focus Timer" Width="390" Height="220" ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen" WindowStyle="ToolWindow"
+        ShowInTaskbar="False" Topmost="True" Background="#202124" Foreground="#F3F4F6">
+  <Grid Margin="22">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+    <TextBlock x:Name="TitleText" FontSize="20" FontWeight="SemiBold" Foreground="#7DD3FC" />
+    <StackPanel Grid.Row="1" VerticalAlignment="Center" Margin="0,14">
+      <TextBlock x:Name="MessageText" FontSize="14" TextWrapping="Wrap" />
+      <TextBlock x:Name="NextPhaseText" FontSize="12" Foreground="#B8BDC5" Margin="0,8,0,0" />
+    </StackPanel>
+    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+      <Button Content="Later" Width="88" Margin="4" IsCancel="True" />
+      <Button x:Name="ContinueButton" Width="145" Margin="4" IsDefault="True" Click="Continue_Click" />
+    </StackPanel>
+  </Grid>
+</Window>

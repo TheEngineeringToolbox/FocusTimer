@@ -2,6 +2,13 @@
 
 Een compacte Pomodoro-app voor Windows 10/11, gebouwd met C#, .NET 8 en WPF. De timer rekent met absolute UTC-timestamps en blijft daardoor correct na tijdelijke belasting of slaapstand.
 
+## Release 1.0.1
+
+- Fasewissels tonen nu naast de Windows-melding een venster dat blijft staan totdat je reageert.
+- De actieknop start de volgende focus- of pauzefase; bij automatisch starten bevestigt de knop de melding.
+- **Later** of sluiten laat een handmatig te starten fase gepauzeerd.
+- Het hoofdvenster en tray-menu blijven bruikbaar terwijl de fasemelding openstaat.
+
 ## Vereisten
 
 - Windows 10 versie 1809 of nieuwer, of Windows 11
@@ -65,6 +72,6 @@ Dagstatistiek: `%LOCALAPPDATA%\FocusTimer\daily-stats.json`
 
 ## Windows-meldingen
 
-De app gebruikt `NotifyIcon.ShowBalloonTip`. Op Windows 10/11 presenteert de Windows-shell dit als een systeemmelding wanneer meldingen voor desktopapps zijn toegestaan. Deze aanpak is bewust gekozen omdat hij betrouwbaar werkt voor een unpackaged WPF-app en geen package identity, installer of externe notification-library nodig heeft.
+De app gebruikt `NotifyIcon.ShowBalloonTip`. Op Windows 10/11 presenteert de Windows-shell dit als een systeemmelding wanneer meldingen voor desktopapps zijn toegestaan. Daarnaast verschijnt bij het einde van iedere fase een klein venster dat blijft staan totdat je **Pauze starten**, **Focus starten**, **Begrepen** of **Later** kiest. Bij automatisch starten loopt de volgende fase al; **Begrepen** sluit dan alleen de melding. **Later** en sluiten laten een niet automatisch gestarte fase gepauzeerd.
 
 Bekende beperking: Windows kan meldingen onderdrukken als Niet storen/Focus is ingeschakeld of meldingen voor desktopapps zijn uitgeschakeld. De melding krijgt zonder geïnstalleerde package identity geen eigen geavanceerde toast-acties.

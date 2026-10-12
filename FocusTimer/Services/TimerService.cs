@@ -4,6 +4,12 @@ namespace FocusTimer.Services;
 
 public enum TimerPhase { Focus, ShortBreak, LongBreak }
 
+public sealed record PhaseTransitionEventArgs(
+    TimerPhase CompletedPhase,
+    TimerPhase NextPhase,
+    TimeSpan NextPhaseDuration,
+    bool IsNextPhaseRunning);
+
 public sealed class TimerService
 {
     private readonly TimerSettings _settings;
@@ -33,7 +39,7 @@ public sealed class TimerService
     };
 
     public event Action? Changed;
-    public event Action<TimerPhase>? Finished;
+    public event Action<PhaseTransitionEventArgs>? Finished;
 
     private TimeSpan CurrentDuration => TimeSpan.FromMinutes(Phase switch
     {
@@ -85,8 +91,8 @@ public sealed class TimerService
         var completedPhase = Phase;
         IsRunning = false;
         Advance(completedNaturally: true);
-        Finished?.Invoke(completedPhase);
         if (_settings.AutoStart) Start();
+        Finished?.Invoke(new PhaseTransitionEventArgs(completedPhase, Phase, CurrentDuration, IsRunning));
         Changed?.Invoke();
     }
 

@@ -20,8 +20,8 @@ var settings = new TimerSettings
 };
 var stats = new DailyStats { PersistenceEnabled = false };
 var timer = new TimerService(settings, stats, () => now);
-var finishedRaised = false;
-timer.Finished += _ => finishedRaised = true;
+PhaseTransitionEventArgs? lastTransition = null;
+timer.Finished += transition => lastTransition = transition;
 
 Check(timer.Phase == TimerPhase.Focus && timer.Remaining == TimeSpan.FromMinutes(25), "begint in focusfase");
 timer.Start();
@@ -35,13 +35,42 @@ Check(!timer.IsRunning && timer.Remaining == TimeSpan.FromMinutes(18), "pauze be
 timer.Start();
 now = now.AddMinutes(18);
 timer.Tick();
-Check(timer.Phase == TimerPhase.ShortBreak && stats.CompletedPomodoros == 1 && finishedRaised, "focus voltooit, telt en meldt");
+Check(timer.Phase == TimerPhase.ShortBreak && stats.CompletedPomodoros == 1 &&
+      lastTransition is { CompletedPhase: TimerPhase.Focus, NextPhase: TimerPhase.ShortBreak,
+          NextPhaseDuration: var shortDuration, IsNextPhaseRunning: false } &&
+      shortDuration == TimeSpan.FromMinutes(5), "focus meldt korte pauze en wacht op starten");
 timer.Skip();
 Check(timer.Phase == TimerPhase.Focus, "skip pauze gaat naar focus");
 timer.Skip(); timer.Skip(); timer.Skip(); timer.Skip(); timer.Skip();
 Check(timer.Phase == TimerPhase.LongBreak, "vierde cyclus gaat naar lange pauze");
 timer.Reset();
 Check(!timer.IsRunning && timer.Remaining == TimeSpan.FromMinutes(15), "reset herstelt huidige faseduur");
+timer.Start();
+now = now.AddMinutes(15);
+timer.Tick();
+Check(lastTransition is { CompletedPhase: TimerPhase.LongBreak, NextPhase: TimerPhase.Focus,
+          NextPhaseDuration: var focusDuration, IsNextPhaseRunning: false } &&
+      focusDuration == TimeSpan.FromMinutes(25), "lange pauze meldt volgende focusfase");
+
+var autoSettings = new TimerSettings
+{
+    FocusMinutes = 1,
+    ShortBreakMinutes = 2,
+    LongBreakMinutes = 3,
+    CyclesBeforeLongBreak = 4,
+    AutoStart = true
+};
+var autoNow = new DateTimeOffset(2026, 9, 30, 9, 0, 0, TimeSpan.Zero);
+var autoTimer = new TimerService(autoSettings, new DailyStats { PersistenceEnabled = false }, () => autoNow);
+PhaseTransitionEventArgs? autoTransition = null;
+autoTimer.Finished += transition => autoTransition = transition;
+autoTimer.Start();
+autoNow = autoNow.AddMinutes(1);
+autoTimer.Tick();
+Check(autoTransition is { CompletedPhase: TimerPhase.Focus, NextPhase: TimerPhase.ShortBreak,
+          NextPhaseDuration: var autoDuration, IsNextPhaseRunning: true } &&
+      autoDuration == TimeSpan.FromMinutes(2) && autoTimer.IsRunning,
+      "automatisch starten meldt dat pauze al loopt");
 
 if (System.Windows.Application.ResourceAssembly is null)
     System.Windows.Application.ResourceAssembly = typeof(FocusTimer.App).Assembly;
